@@ -56,9 +56,9 @@ public class Main {
             Main.class.getClassLoader());
 
         Class<?>  clazz = Class.forName("bibimbap.Main", true, cl);
-        Method method   = clazz.getDeclaredMethod("main", String[].class);
+        Method method   = clazz.getDeclaredMethod("boot", String[].class, ClassLoader.class);
         // Object instance = clazz.newInstance();
-        Object result   = method.invoke(null, (Object)(args));
+        Object result   = method.invoke(null, (Object)(args), (Object)cl);
     }
 
     // MD5 of locally installed bibimbap.jar.

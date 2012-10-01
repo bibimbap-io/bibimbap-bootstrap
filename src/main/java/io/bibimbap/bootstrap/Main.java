@@ -4,8 +4,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
@@ -22,7 +25,7 @@ public class Main {
     private static String bibJar  = bibInst + sep + "bibimbap.jar";
     private static File   bibFile = new File(bibJar);
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         try {
             String localMD5 = getLocalMD5();
             if(localMD5 == null) {
@@ -34,7 +37,10 @@ public class Main {
                 System.out.println("Installation complete.");
             } else {
                 String remoteMD5 = getRemoteMD5();
-                if(!localMD5.equals(remoteMD5)) {
+
+                if(remoteMD5 == null) {
+                    // No connection or other random error. Better not to upgrade.
+                } else if(!localMD5.equals(remoteMD5)) {
                     System.out.println("New version found. Downloading latest...");
                     File dl = downloadLatest();
                     moveOrCopy(dl, bibFile);
@@ -46,7 +52,7 @@ public class Main {
 
         } catch (Exception e) {
             System.err.println("An error occurred : " + e.getLocalizedMessage());
-            throw(e);
+            System.exit(-1);
         }
     }
 
@@ -73,7 +79,10 @@ public class Main {
     // Subject to change if we ever return it as JSON or whatever.
     private static String getRemoteMD5() throws Exception {
         String response = getText("http://bibimbap.io/files/bibimbap-latest.jar.md5");
-        String md5     = response.substring(0,32).toLowerCase();
+
+        if(response == null) return null;
+
+        String md5      = response.substring(0,32).toLowerCase();
         if(md5.length() != 32) {
             throw new Exception("Retrieved MD5 is too short : \"" + md5 + "\"");
         }
@@ -93,18 +102,28 @@ public class Main {
     }
 
     // Reinventing one wheel
-    private static String getText(String url) throws Exception {
-        URLConnection c = (new URL(url)).openConnection();
-        BufferedReader in = new BufferedReader(new InputStreamReader(c.getInputStream())); 
-        StringBuilder response = new StringBuilder();
-        String line;
+    private static String getText(String url) {
+        try {
+            URLConnection c = (new URL(url)).openConnection();
+            c.setConnectTimeout(2000);
 
-        while ((line = in.readLine()) != null) {
-            response.append(line);
+            BufferedReader in = new BufferedReader(new InputStreamReader(c.getInputStream())); 
+            StringBuilder response = new StringBuilder();
+            String line;
+
+            while ((line = in.readLine()) != null) {
+                response.append(line);
+            }
+            in.close();
+
+            return response.toString();
+        } catch (MalformedURLException e) {
+            return null;
+        } catch (SocketTimeoutException e) {
+            return null;
+        } catch (IOException e) {
+            return null;
         }
-        in.close();
-
-        return response.toString();
     }
 
     // Reinventing another wheel.

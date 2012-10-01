@@ -42,7 +42,7 @@ public class Main {
                 }
             }
 
-            boot();
+            boot(args);
 
         } catch (Exception e) {
             System.err.println("An error occurred : " + e.getLocalizedMessage());
@@ -50,7 +50,7 @@ public class Main {
         }
     }
 
-    private static void boot() throws Exception {
+    private static void boot(String[] args) throws Exception {
         URLClassLoader cl = URLClassLoader.newInstance(
             new URL[] { bibFile.toURI().toURL() },
             Main.class.getClassLoader());
@@ -58,7 +58,7 @@ public class Main {
         Class<?>  clazz = Class.forName("bibimbap.Main", true, cl);
         Method method   = clazz.getDeclaredMethod("main", String[].class);
         // Object instance = clazz.newInstance();
-        Object result   = method.invoke(null, (Object)(new String[] {}));
+        Object result   = method.invoke(null, (Object)(args));
     }
 
     // MD5 of locally installed bibimbap.jar.

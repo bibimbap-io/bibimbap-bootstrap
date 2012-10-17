@@ -61,7 +61,7 @@ public class Main {
             new URL[] { bibFile.toURI().toURL() },
             Main.class.getClassLoader());
 
-        Class<?>  clazz = Class.forName("bibimbap.Main", true, cl);
+        Class<?>  clazz = Class.forName("io.bibimbap.Main", true, cl);
         Method method   = clazz.getDeclaredMethod("boot", String[].class, ClassLoader.class);
         // Object instance = clazz.newInstance();
         Object result   = method.invoke(null, (Object)(args), (Object)cl);
